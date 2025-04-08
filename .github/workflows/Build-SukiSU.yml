@@ -235,7 +235,33 @@ jobs:
           else
             LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} gki
           fi
-         
+
+      - name: Check a kernel output files
+        run: |
+          cd kernel_workspace/kernel_platform
+          if [ -f out/arch/arm64/boot/Image.gz-dtb ]; then
+              echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
+          else
+              echo "Kernel output file is empty"
+              exit 1
+          fi
+          
+            
+      - name: Patch SukiSU Ultra KPM
+        if: env.CHECK_FILE_IS_OK == 'true'
+        run: |
+          cd kernel_workspace/kernel_platform
+          git clone https://${{ secrets.TOKEN }}@github.com/KJ-Network/SukiSU-Ultra-KPM-Patcher.git --depth 1
+          #cd SukiSU-Ultra-KPM-Patcher
+          #cp kernel_workspace/kernel_platform/out/arch/arm64/boot/Image .
+          #cp kernel_workspace/kernel_platform/out/arch/arm64/boot/dts/qcom/*.dtb .
+          chmod +x patch_linux
+          ./patch_linux
+          #mv -f oImage Image
+          #gzip -k Image Image.gz
+          #cat Image.gz *.dtb > Image.gz-dtb
+
+          
       - name: Make AnyKernel3
         run: |
           # 克隆 AnyKernel3 仓库
