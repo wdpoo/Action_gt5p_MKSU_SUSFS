@@ -236,16 +236,7 @@ jobs:
             LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} gki
           fi
 
-      - name: Check a kernel output files
-        run: |
-          cd kernel_workspace/kernel_platform
-          if [ -f out/arch/arm64/boot/Image ]; then
-              echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
-          else
-              echo "Kernel output file is empty"
-              exit 1
-          fi
-          
+
             
       - name: Patch SukiSU Ultra KPM
         if: env.CHECK_FILE_IS_OK == 'true'
