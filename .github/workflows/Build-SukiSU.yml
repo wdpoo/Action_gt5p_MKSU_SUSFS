@@ -264,11 +264,11 @@ jobs:
           rm -rf ./AnyKernel3/.git
 
           dir1="./kernel_workspace/kernel_platform/SukiSU_KernelPatch_patch"
-          dir2="./kernel_workspace/kernel_platform/common/out/arch/arm64/boot/"
+          #dir2="./kernel_workspace/kernel_platform/common/out/arch/arm64/boot/"
           target1="./AnyKernel3/"
           target2="./kernel_workspace/kernel"
           cp "$dir1"oImage "$target1"
-          cp "$dir1"Image "$target2"
+          cp "$dir1"oImage "$target2"
 
 
          
