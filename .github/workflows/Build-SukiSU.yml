@@ -173,7 +173,7 @@ jobs:
           git clone https://github.com/wdpoo/kernel_manifest.git
           cd kernel_manifest/patches
           ls
-          cp ../kernel_manifest/patches/patch_linux ./kernel_workspace/kernel_platform/SukiSU_KernelPatch_patch/
+          cp patch_linux ./kernel_workspace/kernel_platform/SukiSU_KernelPatch_patch/
 
       - name: Add SUSFS Configuration Settings
         run: |
