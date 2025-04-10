@@ -146,8 +146,7 @@ jobs:
           cp ../../SukiSU_patch/69_hide_stuff.patch ./
           echo "正在打隐藏应用补丁"
           patch -p1 -F 3 < 69_hide_stuff.patch
-          patch -p1 < ../../.repo/manifests/patches/001-lz4.patch
-          patch -p1 < ../../.repo/manifests/patches/002-zstd.patch
+          
          
       - name: Apply New Hooks Patches
         if: ${{ github.event.inputs.VFS_patch_ENABLED == 'enable' }}
@@ -156,12 +155,23 @@ jobs:
           cp ../../SukiSU_patch/hooks/new_hooks.patch ./
           echo "正在打vfs补丁"
           patch -p1 -F 3 < new_hooks.patch
+          patch -p1 < ../../.repo/manifests/patches/001-lz4.patch
+          patch -p1 < ../../.repo/manifests/patches/002-zstd.patch
           echo "完成"
+          
 
           #if [ "${{ github.event.inputs.KERNEL_VERSION }}" != "5.10" ]; then
           #  cp ../../SukiSU_patch/other/lz4k_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch ./
           #  patch -p1 -F 3 < lz4kd.patch || true
           #fi
+
+      - name: git and move kpm files
+        run: |
+          cd kernel_workspace/kernel_platform
+          mkdir SukiSU_KernelPatch_patch
+          cd SukiSU_KernelPatch_patch
+          git clone https://github.com/wdpoo/kernel_manifest.git
+          cp ../kernel_manifest/patches/patch_linux ./kernel_workspace/kernel_platform/SukiSU_KernelPatch_patch/
 
       - name: Add SUSFS Configuration Settings
         run: |
@@ -239,18 +249,12 @@ jobs:
 
             
       - name: Patch SukiSU Ultra KPM
-        if: env.CHECK_FILE_IS_OK == 'true'
         run: |
-          cd kernel_workspace/kernel_platform
-          git clone https://${{ secrets.TOKEN }}@github.com/KJ-Network/SukiSU-Ultra-KPM-Patcher.git --depth 1
-          #cd SukiSU-Ultra-KPM-Patcher
-          #cp kernel_workspace/kernel_platform/out/arch/arm64/boot/Image .
-          #cp kernel_workspace/kernel_platform/out/arch/arm64/boot/dts/qcom/*.dtb .
+          cd kernel_workspace/kernel_platform/SukiSU_KernelPatch_patch
+          cp ./kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-gki/dist/Image ./
           chmod +x patch_linux
           ./patch_linux
           #mv -f oImage Image
-          #gzip -k Image Image.gz
-          #cat Image.gz *.dtb > Image.gz-dtb
 
           
       - name: Make AnyKernel3
@@ -259,38 +263,14 @@ jobs:
           git clone https://github.com/Kernel-SU/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
 
-          # 定义目录路径
-          dir1="./kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-gki/dist/"
+          dir1="./kernel_workspace/kernel_platform/SukiSU_KernelPatch_patch"
           dir2="./kernel_workspace/kernel_platform/common/out/arch/arm64/boot/"
           target1="./AnyKernel3/"
           target2="./kernel_workspace/kernel"
+          cp "$dir1"oImage "$target1"
+          cp "$dir1"Image "$target2"
 
-          # 在第一个目录中查找 Image 文件
-          if find "$dir1" -name "Image" | grep -q "Image"; then
-            echo "文件 Image 在dist目录中"
-            cp "$dir1"Image "$target1"
-            cp "$dir1"Image "$target2"
-          else
-            # 在第二个目录中查找 Image 文件
-            if find "$dir2" -name "Image" | grep -q "Image"; then
-              echo "文件 Image 在arch/arm64/boot目录中"
-              cp "$dir2"Image "$target1"
-              cp "$dir2"Image "$target2"
-            else
-              # 在 kernel_workspace/kernel_platform/common/out/ 的所有子目录中查找 Image 文件
-              echo "在 kernel_workspace/kernel_platform/common/out/ 的所有子目录中查找 Image 文件"
-              image_path=$(find "./kernel_workspace/kernel_platform/common/out/" -name "Image" | head -n 1)
-              
-              if [ -n "$image_path" ]; then
-                echo "找到 Image 文件: $image_path"
-                cp "$image_path" "$target1"
-                cp "$image_path" "$target2"
-              else
-                echo "在所有目录中未找到 Image 文件，构建可能失败"
-              fi
-            fi
-          fi
-         
+
          
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v4
